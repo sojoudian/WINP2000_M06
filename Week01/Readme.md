@@ -18,7 +18,8 @@ echo "# WINP2000_M06" > README.md (override)
  open -a Visual\ Studio\ Code .
  Code .
 
-bash```git init
+```bash
+git init
 git add README.md
 git add .
 
