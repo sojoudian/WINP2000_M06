@@ -142,7 +142,7 @@
         fetch('https://api.ipify.org?format=json')
             .then(response => response.json())
             .then(data => {
-                fetch('http://localhost/api/visitors', {
+                fetch('http://localhost/api/vistors', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -210,3 +210,4 @@
 
 </body>
 </html>
+
