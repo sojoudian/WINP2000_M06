@@ -149,6 +149,143 @@ You can pull the Docker image on any system and run it without needing the sourc
 This project covers the fundamentals of building a web server in Go, creating a Dockerized application, and deploying it using Docker Hub. The steps provide a practical understanding of containerization and web server deployment.
 
 
+
+
+# Understanding Multistage Dockerfile with Example
+
+---
+
+## What is a Multistage Dockerfile?
+
+A multistage Dockerfile is a powerful feature in Docker that allows you to use multiple `FROM` instructions within a single Dockerfile. This is particularly useful for optimizing image sizes, as it enables you to:
+1. Build your application in one stage.
+2. Copy only the necessary files/binaries into the final, lightweight stage.
+
+The result is a production-ready Docker image that is smaller and more secure.
+
+---
+
+## Advantages of Multistage Builds
+1. **Reduced Image Size**:
+   - Development tools, temporary files, and unnecessary dependencies are left behind in the build stages.
+2. **Simplified Workflow**:
+   - No need for separate scripts or manual steps to build and copy artifacts.
+3. **Improved Security**:
+   - Minimizing the number of layers reduces the attack surface of the container.
+
+---
+
+## Multistage Dockerfile Example
+
+Based on the uploaded Go files, here's an example of a multistage Dockerfile:
+
+```dockerfile
+# Stage 1: Build Stage
+FROM golang:1.20 as builder
+WORKDIR /app
+
+# Copy Go modules and download dependencies
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy the source code and build the application
+COPY . .
+RUN go build -o server main.go
+
+# Stage 2: Production Stage
+FROM alpine:latest
+WORKDIR /root/
+
+# Copy the compiled binary and static files from the builder stage
+COPY --from=builder /app/server .
+COPY ./static ./static
+
+# Expose the necessary port and define the default command
+EXPOSE 8080
+CMD ["./server"]
+```
+
+---
+
+## Step-by-Step Explanation of the Multistage Dockerfile
+
+### 1. **Stage 1: Build Stage**
+- **`FROM golang:1.20 as builder`**:
+  - The first stage uses the official Golang image for building the application.
+  - This stage is named `builder` to refer to it later.
+
+- **`WORKDIR /app`**:
+  - Sets the working directory for subsequent commands.
+
+- **Copy Go Modules**:
+  ```dockerfile
+  COPY go.mod go.sum ./
+  RUN go mod download
+  ```
+  - This ensures dependencies are downloaded efficiently using the Go module system.
+
+- **Copy Source Code**:
+  ```dockerfile
+  COPY . .
+  RUN go build -o server main.go
+  ```
+  - Copies the source code into the container and builds the Go application into an executable binary named `server`.
+
+---
+
+### 2. **Stage 2: Production Stage**
+- **`FROM alpine:latest`**:
+  - This stage uses a minimal base image (`alpine`) to create a lightweight production image.
+
+- **`COPY --from=builder`**:
+  ```dockerfile
+  COPY --from=builder /app/server .
+  COPY ./static ./static
+  ```
+  - Only the compiled binary (`server`) and required files (e.g., `static/`) are copied from the `builder` stage.
+
+- **Expose Port and Define Command**:
+  ```dockerfile
+  EXPOSE 8080
+  CMD ["./server"]
+  ```
+  - The `EXPOSE` command specifies the port for the application.
+  - The `CMD` command runs the `server` binary by default.
+
+---
+
+## Why Use Multistage Builds for This Project?
+
+- **Optimized Size**:
+  - The final production image only contains the compiled binary and static files, without Go tools or intermediate files.
+
+- **Better Portability**:
+  - The lightweight production image is ideal for deployment in resource-constrained environments.
+
+- **Easier Maintenance**:
+  - All steps (build and deployment) are consolidated in a single Dockerfile.
+
+---
+
+## Steps to Build and Run the Multistage Docker Image
+
+1. Build the image:
+   ```bash
+   docker build -t my-multistage-go-app .
+   ```
+2. Run the container:
+   ```bash
+   docker run -p 8080:8080 my-multistage-go-app
+   ```
+
+---
+
+## Conclusion
+
+Multistage Dockerfiles simplify the process of creating optimized, secure, and production-ready container images. By separating the build and runtime environments, you achieve better performance and maintainability for your applications.
+
+
+
 # Docker commands
  ```bash
  docker build -t dw10:0.1 .
